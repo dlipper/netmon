@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetMon • Raspberry Pi Internet Monitor</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">🌐</div>
+        <div class="brand-title">
+          <h1>NetMon Dashboard</h1>
+          <p>Local Internet Availability & Speed Monitor</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="statusPill" class="status-pill">
+          <span class="status-dot"></span>
+          <span id="statusText">Checking...</span>
+        </div>
+        <button id="btnSpeedtest" class="btn-speedtest" onclick="triggerSpeedtest()">
+          <span id="btnIcon">⚡</span>
+          <span id="btnText">Check the speed</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Speedtest Running Banner -->
+    <div id="testBanner" class="banner" style="display: none;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="spinner"></span>
+        <span>Running Speedtest via Ookla engine... This usually takes ~25 seconds.</span>
+      </div>
+    </div>
+
+    <!-- Quick Metrics Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Ping Latency</div>
+        <div class="metric-value">
+          <span id="metricPing">--</span>
+          <span class="metric-unit">ms</span>
+        </div>
+        <div class="metric-sub" id="metricTarget">Target: 1.1.1.1</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">24h Uptime</div>
+        <div class="metric-value">
+          <span id="metricUptime">--</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="metric-sub" id="metricUptimeSamples">0 samples</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Latest Download</div>
+        <div class="metric-value" style="color: var(--accent-cyan);">
+          <span id="metricDownload">--</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+        <div class="metric-sub" id="metricSpeedDate">Never tested</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Latest Upload</div>
+        <div class="metric-value" style="color: var(--accent-purple);">
+          <span id="metricUpload">--</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+        <div class="metric-sub" id="metricServer">--</div>
+      </div>
+    </div>
+
+    <!-- Timeline Chart: Internet Availability & Ping Latency -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>📶 Internet Availability & Ping Timeline</h2>
+        <div class="range-buttons">
+          <button class="range-btn" onclick="setPingRange(1, this)">1h</button>
+          <button class="range-btn" onclick="setPingRange(6, this)">6h</button>
+          <button class="range-btn active" onclick="setPingRange(24, this)">24h</button>
+          <button class="range-btn" onclick="setPingRange(168, this)">7d</button>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="pingChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Speedtest Bar/Column Chart -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>🚀 Speedtest Performance History</h2>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Download & Upload Columns</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="speedChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Speedtest History Table -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h2>📋 Speedtest History Log</h2>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Download</th>
+              <th>Upload</th>
+              <th>Ping / Jitter</th>
+              <th>Server</th>
+              <th>ISP</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr>
+              <td colspan="7" class="empty-state">Loading history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

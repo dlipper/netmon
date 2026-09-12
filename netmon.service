@@ -1,0 +1,20 @@
+[Unit]
+Description=NetMon - Raspberry Pi Internet Availability & Speedtest Monitor
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%USER%
+Group=%GROUP%
+WorkingDirectory=%PROJECT_DIR%
+Environment=PYTHONPATH=%PROJECT_DIR%
+ExecStart=%PROJECT_DIR%/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 80
+Restart=always
+RestartSec=5
+# Allow binding to privileged port 80 as unprivileged user
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

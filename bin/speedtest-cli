@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+# Resolve the real project root directory even if invoked through a symlink
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+PROJECT_DIR="$(cd -P "$SCRIPT_DIR/.." && pwd)"
+
+if [ ! -f "$PROJECT_DIR/bin/speedtest-ookla" ] || [ ! -d "$PROJECT_DIR/venv" ]; then
+    echo "First-time setup: initializing NetMon environment..."
+    "$PROJECT_DIR/install_service.sh"
+fi
+
+export PYTHONPATH="$PROJECT_DIR"
+exec "$PROJECT_DIR/venv/bin/python3" -m app.cli "$@"
