@@ -9,7 +9,10 @@ User=%USER%
 Group=%GROUP%
 WorkingDirectory=%PROJECT_DIR%
 Environment=PYTHONPATH=%PROJECT_DIR%
-ExecStart=%PROJECT_DIR%/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 80
+Environment=NETMON_HOST=%HOST%
+Environment=NETMON_PORT=%PORT%
+Environment=NETMON_HOME_URL=%HOME_URL%
+ExecStart=%PROJECT_DIR%/venv/bin/uvicorn app.main:app --host %HOST% --port %PORT%
 Restart=always
 RestartSec=5
 # Allow binding to privileged port 80 as unprivileged user

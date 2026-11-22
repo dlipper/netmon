@@ -4,6 +4,32 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
+HOST="${NETMON_HOST:-0.0.0.0}"
+PORT="${NETMON_PORT:-80}"
+HOME_URL="${NETMON_HOME_URL:-/}"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --host)
+            HOST="$2"
+            shift 2
+            ;;
+        --port)
+            PORT="$2"
+            shift 2
+            ;;
+        --home-url)
+            HOME_URL="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--host HOST] [--port PORT] [--home-url URL]"
+            exit 1
+            ;;
+    esac
+done
+
 echo "=================================================="
 echo "    NetMon - Installation & Service Setup         "
 echo "=================================================="
@@ -74,16 +100,19 @@ if command -v sudo >/dev/null 2>&1; then
     CURRENT_USER="${SUDO_USER:-$USER}"
     CURRENT_GROUP="$(id -gn "$CURRENT_USER" 2>/dev/null || echo "$CURRENT_USER")"
 
-    echo "Configuring systemd service (/etc/systemd/system/netmon.service) for user '$CURRENT_USER'..."
+    echo "Configuring systemd service (/etc/systemd/system/netmon.service) for user '$CURRENT_USER' on $HOST:$PORT..."
     sed -e "s|%USER%|$CURRENT_USER|g" \
         -e "s|%GROUP%|$CURRENT_GROUP|g" \
         -e "s|%PROJECT_DIR%|$PROJECT_DIR|g" \
+        -e "s|%HOST%|$HOST|g" \
+        -e "s|%PORT%|$PORT|g" \
+        -e "s|%HOME_URL%|$HOME_URL|g" \
         "$PROJECT_DIR/netmon.service" | sudo tee /etc/systemd/system/netmon.service >/dev/null
 
     sudo systemctl daemon-reload
     sudo systemctl enable netmon.service
     sudo systemctl restart netmon.service
-    echo "✓ netmon.service configured, enabled, and started on port 80!"
+    echo "✓ netmon.service configured, enabled, and started on $HOST:$PORT!"
     echo ""
     sudo systemctl status netmon.service --no-pager
 else

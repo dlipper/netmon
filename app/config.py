@@ -13,5 +13,6 @@ PING_TARGETS = ["1.1.1.1", "8.8.8.8"]
 PING_INTERVAL_SECONDS = 30
 
 # Web server settings
-HOST = "0.0.0.0"
-PORT = 80
+HOST = os.environ.get("NETMON_HOST", "0.0.0.0")
+PORT = int(os.environ.get("NETMON_PORT", "80"))
+HOME_URL = os.environ.get("NETMON_HOME_URL", "/")

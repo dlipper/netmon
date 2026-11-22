@@ -1,10 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI, BackgroundTasks, Query
+from fastapi import FastAPI, BackgroundTasks, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
+from app.config import HOME_URL
 from app.database import (
     init_db,
     get_latest_ping,
@@ -40,14 +41,20 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 async def serve_index():
     return FileResponse(str(STATIC_DIR / "index.html"))
 
+
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"])
+async def serve_favicon():
+    return FileResponse(str(STATIC_DIR / "favicon.ico"), media_type="image/x-icon")
+
 @app.get("/api/status")
-async def api_status():
+async def api_status(request: Request):
     latest_ping = get_latest_ping()
     latest_speed = get_latest_speedtest()
     stats_24h = get_uptime_stats(hours=24)
     stats_7d = get_uptime_stats(hours=168)
     
     is_online = latest_ping["is_online"] == 1 if latest_ping else False
+    home_url = request.headers.get("x-wrapper-home") or HOME_URL
     
     return {
         "is_online": is_online,
@@ -55,7 +62,8 @@ async def api_status():
         "stats_24h": stats_24h,
         "stats_7d": stats_7d,
         "speedtest_running": is_speedtest_running(),
-        "latest_speedtest": latest_speed
+        "latest_speedtest": latest_speed,
+        "home_url": home_url
     }
 
 @app.get("/api/ping-history")

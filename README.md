@@ -76,7 +76,7 @@ The installer will:
 1. Create the Python virtual environment and install dependencies (`fastapi`, `uvicorn`).
 2. Download the native Ookla Speedtest binary for your system architecture.
 3. Symlink `speedtest` into `~/.local/bin/` and `/usr/local/bin/`.
-4. Install, enable, and start `netmon.service` on port 80.
+4. Install, enable, and start `netmon.service` on port 80 (or a custom `--host` / `--port` when running behind a reverse proxy, e.g., `./install_service.sh --host 127.0.0.1 --port 8001`).
 
 ---
 

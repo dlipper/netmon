@@ -8,12 +8,75 @@ document.addEventListener("DOMContentLoaded", () => {
   initSpeedChart();
   refreshAllData();
 
+  window.addEventListener("wrapper:themechange", updateChartsTheme);
+
   // Auto-refresh ping timeline and status every 30 seconds
   setInterval(() => {
     refreshStatus();
     loadPingHistory(currentPingHours);
   }, 30000);
 });
+
+function getChartTheme() {
+  const isDark = window.WrapperTheme
+    ? window.WrapperTheme.getEffectiveScheme() === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  return isDark
+    ? {
+        tooltipBg: "#1a2332",
+        tooltipTitle: "#94a3b8",
+        tooltipBody: "#f1f5f9",
+        tooltipBorder: "#2a374a",
+        gridColor: "rgba(255, 255, 255, 0.06)",
+        tickColor: "#94a3b8",
+        legendColor: "#94a3b8",
+        pingLine: "#38bdf8",
+        pingFill: "rgba(56, 189, 248, 0.08)",
+      }
+    : {
+        tooltipBg: "#ffffff",
+        tooltipTitle: "#475569",
+        tooltipBody: "#0f172a",
+        tooltipBorder: "#cbd5e1",
+        gridColor: "rgba(15, 23, 42, 0.08)",
+        tickColor: "#475569",
+        legendColor: "#475569",
+        pingLine: "#0284c7",
+        pingFill: "rgba(2, 132, 199, 0.1)",
+      };
+}
+
+function updateChartsTheme() {
+  const t = getChartTheme();
+  if (pingChart) {
+    pingChart.data.datasets[0].borderColor = t.pingLine;
+    pingChart.data.datasets[0].backgroundColor = t.pingFill;
+    const tip = pingChart.options.plugins.tooltip;
+    tip.backgroundColor = t.tooltipBg;
+    tip.titleColor = t.tooltipTitle;
+    tip.bodyColor = t.tooltipBody;
+    tip.borderColor = t.tooltipBorder;
+    pingChart.options.scales.x.grid.color = t.gridColor;
+    pingChart.options.scales.x.ticks.color = t.tickColor;
+    pingChart.options.scales.y.grid.color = t.gridColor;
+    pingChart.options.scales.y.ticks.color = t.tickColor;
+    pingChart.update("none");
+  }
+  if (speedChart) {
+    speedChart.options.plugins.legend.labels.color = t.legendColor;
+    const tip = speedChart.options.plugins.tooltip;
+    tip.backgroundColor = t.tooltipBg;
+    tip.titleColor = t.tooltipTitle;
+    tip.bodyColor = t.tooltipBody;
+    tip.borderColor = t.tooltipBorder;
+    speedChart.options.scales.x.grid.color = t.gridColor;
+    speedChart.options.scales.x.ticks.color = t.tickColor;
+    speedChart.options.scales.y.grid.color = t.gridColor;
+    speedChart.options.scales.y.ticks.color = t.tickColor;
+    speedChart.update("none");
+  }
+}
 
 function refreshAllData() {
   refreshStatus();
@@ -23,9 +86,14 @@ function refreshAllData() {
 
 async function refreshStatus() {
   try {
-    const res = await fetch("/api/status");
+    const res = await fetch("api/status");
     if (!res.ok) return;
     const data = await res.json();
+
+    if (data.home_url) {
+      const homeBtn = document.getElementById("btnHome");
+      if (homeBtn) homeBtn.href = data.home_url;
+    }
 
     // Status pill
     const pill = document.getElementById("statusPill");
@@ -71,6 +139,7 @@ async function refreshStatus() {
 
 function initPingChart() {
   const ctx = document.getElementById("pingChart").getContext("2d");
+  const t = getChartTheme();
   pingChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -79,8 +148,8 @@ function initPingChart() {
         {
           label: "Ping Latency (ms)",
           data: [],
-          borderColor: "#38bdf8",
-          backgroundColor: "rgba(56, 189, 248, 0.08)",
+          borderColor: t.pingLine,
+          backgroundColor: t.pingFill,
           fill: true,
           tension: 0.2,
           pointRadius: 2,
@@ -103,10 +172,10 @@ function initPingChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#1a2332",
-          titleColor: "#94a3b8",
-          bodyColor: "#f1f5f9",
-          borderColor: "#2a374a",
+          backgroundColor: t.tooltipBg,
+          titleColor: t.tooltipTitle,
+          bodyColor: t.tooltipBody,
+          borderColor: t.tooltipBorder,
           borderWidth: 1,
           callbacks: {
             label: (item) => {
@@ -121,14 +190,14 @@ function initPingChart() {
       },
       scales: {
         x: {
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
-          ticks: { color: "#64748b", maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }
+          grid: { color: t.gridColor },
+          ticks: { color: t.tickColor, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }
         },
         y: {
           beginAtZero: true,
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
+          grid: { color: t.gridColor },
           ticks: {
-            color: "#64748b",
+            color: t.tickColor,
             callback: (val) => `${val} ms`
           }
         }
@@ -139,6 +208,7 @@ function initPingChart() {
 
 function initSpeedChart() {
   const ctx = document.getElementById("speedChart").getContext("2d");
+  const t = getChartTheme();
   speedChart = new Chart(ctx, {
     type: "bar",
     data: {
@@ -171,13 +241,13 @@ function initSpeedChart() {
       },
       plugins: {
         legend: {
-          labels: { color: "#94a3b8" }
+          labels: { color: t.legendColor }
         },
         tooltip: {
-          backgroundColor: "#1a2332",
-          titleColor: "#94a3b8",
-          bodyColor: "#f1f5f9",
-          borderColor: "#2a374a",
+          backgroundColor: t.tooltipBg,
+          titleColor: t.tooltipTitle,
+          bodyColor: t.tooltipBody,
+          borderColor: t.tooltipBorder,
           borderWidth: 1,
           callbacks: {
             label: (item) => `${item.dataset.label}: ${item.raw} Mbps`
@@ -186,14 +256,14 @@ function initSpeedChart() {
       },
       scales: {
         x: {
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
-          ticks: { color: "#64748b", maxRotation: 45 }
+          grid: { color: t.gridColor },
+          ticks: { color: t.tickColor, maxRotation: 45 }
         },
         y: {
           beginAtZero: true,
-          grid: { color: "rgba(255, 255, 255, 0.05)" },
+          grid: { color: t.gridColor },
           ticks: {
-            color: "#64748b",
+            color: t.tickColor,
             callback: (val) => `${val} Mbps`
           }
         }
@@ -204,7 +274,7 @@ function initSpeedChart() {
 
 async function loadPingHistory(hours = 24) {
   try {
-    const res = await fetch(`/api/ping-history?hours=${hours}`);
+    const res = await fetch(`api/ping-history?hours=${hours}`);
     if (!res.ok) return;
     const data = await res.json();
 
@@ -231,7 +301,7 @@ async function loadPingHistory(hours = 24) {
 
 async function loadSpeedtestHistory() {
   try {
-    const res = await fetch("/api/speedtests?limit=25");
+    const res = await fetch("api/speedtests?limit=25");
     if (!res.ok) return;
     const data = await res.json();
     const tests = data.speedtests || [];
@@ -290,7 +360,7 @@ async function triggerSpeedtest() {
   if (btn.disabled) return;
 
   try {
-    const res = await fetch("/api/speedtest/run", { method: "POST" });
+    const res = await fetch("api/speedtest/run", { method: "POST" });
     if (res.status === 409) {
       alert("A speedtest is already in progress!");
       startSpeedtestPolling();
@@ -320,7 +390,7 @@ function startSpeedtestPolling() {
 
   const poller = setInterval(async () => {
     try {
-      const res = await fetch("/api/speedtest/status");
+      const res = await fetch("api/speedtest/status");
       const data = await res.json();
       if (!data.running) {
         clearInterval(poller);
